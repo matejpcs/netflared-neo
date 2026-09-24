@@ -1,4 +1,4 @@
-name: Build and release all NeoForge 1.21.x
+name: Build NeoForge
 
 on:
   push:
