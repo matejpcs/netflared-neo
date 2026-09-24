@@ -1,21 +1,29 @@
-.gradle
-**/build/
-!**/src/**/build/
+# ====================================================================
+# Sestavení a výstupy (Builds)
+# ====================================================================
+# Ignoruje všechny složky build/ v jakékoliv úrovni projektu
+build/
+bin/
+out/
 
-# Ignore Gradle GUI config
-gradle-app.setting
+# ====================================================================
+# Gradle a Gradlew
+# ====================================================================
+# Lokální cache a konfigurační složka Gradle
+.gradle/
 
-# Avoid ignoring Gradle wrapper jar file (.jar files are usually ignored)
-!gradle-wrapper.jar
+# Spouštěcí skripty Gradle wrapperu (pro Windows i Linux/macOS)
+gradlew
+gradlew.bat
 
-# Avoid ignore Gradle wrappper properties
-!gradle-wrapper.properties
+# Složka wrapperu obsahující staženou distribuci a vlastnosti
+gradle/wrapper/
 
-# Cache of project
-.gradletasknamecache
+# ====================================================================
+# Vývojové prostředí (IDE) - IntelliJ IDEA / Android Studio
+# ====================================================================
+# Ignoruje uživatelské nastavení projektu a workspace
+.idea/
 
-# Eclipse Gradle plugin generated files
-# Eclipse Core
-.project
-# JDT-specific (Eclipse Java Development Tools)
-.classpath
+# Volitelné: Ignoruje také soubory modulů vytvořené IntelliJ
+*.iml
