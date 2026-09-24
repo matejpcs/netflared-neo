@@ -1,4 +1,4 @@
-name: Build and release all NeoForge 1.21.x
+name: Build NeoForge
 
 on:
   push:
@@ -43,7 +43,7 @@ jobs:
 
       - name: Build
         working-directory: source
-        run: gradle clean build --no-daemon --no-parallel --no-configuration-cache --refresh-dependencies -Dorg.gradle.caching=false -Pneogradle.subsystems.decompiler.enabled=false
+        run: gradle clean build --no-daemon --no-parallel --no-configuration-cache --refresh-dependencies -Dorg.gradle.caching=false
 
       - name: Prepare release artifact
         shell: bash
