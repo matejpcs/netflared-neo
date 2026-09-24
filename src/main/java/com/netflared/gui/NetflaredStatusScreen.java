@@ -1,0 +1,212 @@
+package com.netflared.gui;
+
+import com.netflared.NetflaredMod;
+import com.netflared.config.NetflaredConfig;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.components.Button;
+import net.minecraft.client.gui.screens.ConnectScreen;
+import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.client.multiplayer.ServerData;
+import net.minecraft.client.multiplayer.resolver.ServerAddress;
+import net.minecraft.network.chat.Component;
+
+import java.io.IOException;
+import java.net.InetSocketAddress;
+import java.net.Socket;
+
+/** Status screen for starting, joining, or cancelling a Netflared tunnel. */
+public class NetflaredStatusScreen extends Screen {
+    public enum State { WORKING, SUCCESS, ERROR }
+
+    private final Screen parent;
+    private final NetflaredConfig.Profile profile;
+    private volatile State state = State.WORKING;
+    private volatile String message = "Preparing...";
+    private volatile boolean cancelled;
+    private Button backButton;
+    private Button joinButton;
+    private Button cancelButton;
+
+    public NetflaredStatusScreen(Screen parent, NetflaredConfig.Profile profile) {
+        super(NetflaredMod.tr("netflared.status.title", profile.domain));
+        this.parent = parent;
+        this.profile = profile;
+    }
+
+    public void updateStatus(String msg, State newState) {
+        message = msg;
+        state = newState;
+        Minecraft client = Minecraft.getInstance();
+        client.execute(() -> {
+            if (backButton != null) {
+                backButton.visible = newState != State.WORKING;
+                backButton.active = newState != State.WORKING;
+                backButton.setX(newState == State.SUCCESS ? width / 2 - 105 : width / 2 - 50);
+            }
+            if (joinButton != null) {
+                joinButton.visible = newState == State.SUCCESS;
+                joinButton.active = newState == State.SUCCESS;
+                joinButton.setX(width / 2 + 5);
+            }
+            if (cancelButton != null) {
+                cancelButton.visible = newState == State.WORKING;
+                cancelButton.active = newState == State.WORKING;
+            }
+        });
+    }
+
+    public void connect() {
+        cancelled = false;
+        Thread thread = new Thread(() -> {
+            try {
+                var manager = NetflaredMod.getTunnelManager();
+                if (!manager.isBinaryReady()) {
+                    updateStatus(
+                            NetflaredMod.tr("netflared.status.downloading").getString(),
+                            State.WORKING);
+                    manager.ensureBinary();
+                    if (cancelled) return;
+                }
+
+                if (cancelled) return;
+                updateStatus(
+                        NetflaredMod.tr("netflared.status.connecting").getString(),
+                        State.WORKING);
+                Process process = manager.startTunnel(profile);
+                waitForLocalListener(process, profile, 10_000L);
+
+                if (process.isAlive()) {
+                    updateStatus(
+                            NetflaredMod.tr("netflared.status.ready").getString(),
+                            State.SUCCESS);
+                } else {
+                    updateStatus(
+                            NetflaredMod.tr("netflared.status.exited").getString(),
+                            State.ERROR);
+                }
+            } catch (Exception e) {
+                NetflaredMod.LOGGER.error("[Netflared] Tunnel failed for {}", profile.domain, e);
+                String detail = e.getMessage() == null
+                        ? e.getClass().getSimpleName()
+                        : e.getMessage();
+                updateStatus(
+                        NetflaredMod.tr("netflared.status.error_detail", detail).getString(),
+                        State.ERROR);
+            }
+        }, "netflared-tunnel-setup");
+        thread.setDaemon(true);
+        thread.start();
+    }
+
+    private void waitForLocalListener(Process process, NetflaredConfig.Profile profile, long timeoutMillis)
+            throws InterruptedException, IOException {
+        long deadline = System.currentTimeMillis() + timeoutMillis;
+        while (System.currentTimeMillis() < deadline) {
+            if (!process.isAlive()) {
+                throw new IOException("cloudflared exited before the local listener became ready");
+            }
+            if (isLocalListenerReady(profile.port)) {
+                return;
+            }
+            Thread.sleep(100L);
+        }
+        throw new IOException("Timed out waiting for local listener on 127.0.0.1:" + profile.port);
+    }
+
+    private boolean isLocalListenerReady(int port) {
+        if (port < 1 || port > 65535) return false;
+        try (Socket socket = new Socket()) {
+            socket.connect(new InetSocketAddress("127.0.0.1", port), 250);
+            return true;
+        } catch (IOException ignored) {
+            return false;
+        }
+    }
+
+    @Override
+    protected void init() {
+        int centerX = width / 2;
+        int centerY = height / 2;
+
+        backButton = Button.builder(
+                NetflaredMod.tr("netflared.status.back"),
+                btn -> minecraft.setScreen(parent))
+                .bounds(centerX - 50, centerY + 50, 100, 20).build();
+        backButton.visible = state != State.WORKING;
+        backButton.active = state != State.WORKING;
+        if (state == State.SUCCESS) {
+            backButton.setX(centerX - 105);
+        }
+        addRenderableWidget(backButton);
+
+        joinButton = Button.builder(
+                NetflaredMod.tr("netflared.status.join"),
+                btn -> {
+                    ServerAddress address = ServerAddress.parseString(profile.getJoinAddress());
+                    ServerData data = new ServerData(
+                            profile.name, profile.getJoinAddress(), ServerData.Type.OTHER);
+                    ConnectScreen.startConnecting(this, minecraft, address, data, false, null);
+                })
+                .bounds(centerX + 5, centerY + 50, 100, 20).build();
+        joinButton.visible = state == State.SUCCESS;
+        joinButton.active = state == State.SUCCESS;
+        addRenderableWidget(joinButton);
+
+        cancelButton = Button.builder(
+                NetflaredMod.tr("netflared.status.cancel"),
+                btn -> {
+                    cancelled = true;
+                    NetflaredMod.getTunnelManager().stopTunnel(profile.domain);
+                    profile.running = false;
+                    minecraft.setScreen(parent);
+                })
+                .bounds(centerX - 50, centerY + 75, 100, 20).build();
+        cancelButton.visible = state == State.WORKING;
+        cancelButton.active = state == State.WORKING;
+        addRenderableWidget(cancelButton);
+    }
+
+    @Override
+    public void render(GuiGraphics graphics, int mouseX, int mouseY, float delta) {
+        super.render(graphics, mouseX, mouseY, delta);
+
+        int centerX = width / 2;
+        int centerY = height / 2;
+        Component heading = switch (state) {
+            case WORKING -> NetflaredMod.tr("netflared.status.working");
+            case SUCCESS -> NetflaredMod.tr("netflared.status.connected");
+            case ERROR -> NetflaredMod.tr("netflared.status.failed");
+        };
+
+        int headingColor = switch (state) {
+            case WORKING -> 0xFF63D7FF;
+            case SUCCESS -> 0xFF55FF88;
+            case ERROR -> 0xFFFF6666;
+        };
+
+        drawCentered(graphics, heading, centerX, centerY - 34, headingColor, true);
+        drawCentered(graphics, Component.literal(message), centerX, centerY - 12, 0xFFE8E8E8, false);
+
+        if (state == State.SUCCESS) {
+            drawCentered(graphics,
+                    NetflaredMod.tr("netflared.status.local", profile.getJoinAddress()),
+                    centerX, centerY + 12, 0xFF63D7FF, false);
+            drawCentered(graphics,
+                    NetflaredMod.tr("netflared.status.domain", profile.domain),
+                    centerX, centerY + 27, 0xFFB8A1FF, false);
+        }
+    }
+
+    private void drawCentered(GuiGraphics graphics, Component text,
+                              int centerX, int y, int color, boolean shadow) {
+        graphics.drawString(font, text, centerX - font.width(text) / 2, y, color, shadow);
+    }
+
+    @Override
+    public void onClose() {
+        cancelled = true;
+        NetflaredMod.getTunnelManager().stopTunnel(profile.domain);
+        minecraft.setScreen(parent);
+    }
+}
