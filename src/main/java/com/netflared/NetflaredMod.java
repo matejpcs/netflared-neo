@@ -5,6 +5,7 @@ import com.netflared.config.NetflaredConfig;
 import com.netflared.gui.NetflaredSettingsScreen;
 import com.netflared.tunnel.TunnelManager;
 import net.minecraft.client.KeyMapping;
+import net.minecraft.resources.Identifier;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.gui.screens.TitleScreen;
@@ -85,7 +86,8 @@ public class NetflaredMod {
         Runtime.getRuntime().addShutdownHook(new Thread(()->{try{if(tunnelManager!=null)tunnelManager.forceStopAll();}catch(Throwable ignored){}}, "netflared-shutdown"));
         modBus.addListener(NetflaredMod::registerKeyMappings);NeoForge.EVENT_BUS.register(NetflaredMod.class);
     }
-    private static void registerKeyMappings(RegisterKeyMappingsEvent e){openTunnelKey=new KeyMapping("key.netflared.open_tunnel_ui",InputConstants.Type.KEYSYM,GLFW.GLFW_KEY_F9,"key.categories.netflared");e.register(openTunnelKey);}
+    private static final KeyMapping.Category NETFLARED_KEY_CATEGORY = KeyMapping.Category.register(Identifier.fromNamespaceAndPath(MOD_ID, "controls"));
+    private static void registerKeyMappings(RegisterKeyMappingsEvent e){e.registerCategory(NETFLARED_KEY_CATEGORY);openTunnelKey=new KeyMapping("key.netflared.open_tunnel_ui",InputConstants.Type.KEYSYM,GLFW.GLFW_KEY_F9,NETFLARED_KEY_CATEGORY);e.register(openTunnelKey);}
     @SubscribeEvent public static void onClientTick(ClientTickEvent.Post e){Minecraft c=Minecraft.getInstance();Translations.refreshIfChanged();if(openTunnelKey==null)return;while(openTunnelKey.consumeClick()){Screen s=c.screen;if(s instanceof TitleScreen||s instanceof JoinMultiplayerScreen)c.setScreen(new NetflaredSettingsScreen(s));}}
     @SubscribeEvent public static void onScreenInit(ScreenEvent.Init.Post e){if(!(e.getScreen() instanceof JoinMultiplayerScreen s))return;e.addListener(net.minecraft.client.gui.components.Button.builder(tr("netflared.button.label"),b->Minecraft.getInstance().setScreen(new NetflaredSettingsScreen(s))).bounds(5,5,80,20).build());}
 }
