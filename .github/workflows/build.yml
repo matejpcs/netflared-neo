@@ -33,7 +33,7 @@ jobs:
           cache-disabled: true
       - name: Build
         working-directory: source
-        run: gradle clean build --no-daemon --no-parallel --no-configuration-cache --refresh-dependencies -Dorg.gradle.caching=false
+        run: gradle clean build --no-daemon --no-parallel --no-configuration-cache --refresh-dependencies -Dorg.gradle.caching=false -Pneogradle.subsystems.decompiler.enabled=true
       - name: Prepare release artifact
         shell: bash
         run: |
