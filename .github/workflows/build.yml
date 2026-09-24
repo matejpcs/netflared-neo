@@ -73,8 +73,7 @@ jobs:
           notes='## Minecraft / NeoForge branches
 
           This release is built from the dedicated version branches 1.21 through 1.21.11.
-          Each JAR is compiled against its corresponding Minecraft/NeoForge version.
-          Sources JARs are intentionally excluded.'
+          Each JAR is compiled against its corresponding Minecraft/NeoForge version.'
 
           if gh release view "$tag" --repo "${{ github.repository }}" >/dev/null 2>&1; then
             gh release edit "$tag" --repo "${{ github.repository }}" --title "$title" --notes "$notes"
