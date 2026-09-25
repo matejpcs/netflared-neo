@@ -6,7 +6,7 @@ plugins {
 version = mod_version
 group = mod_group_id
 base { archivesName = mod_id }
-java.toolchain.languageVersion = JavaLanguageVersion.of(21)
+java.toolchain.languageVersion = JavaLanguageVersion.of(project.findProperty('java_version') ?: '21')
 repositories { mavenCentral() }
 
 runs {
@@ -22,7 +22,7 @@ runs {
 }
 
 dependencies {
-    implementation "net.neoforged:neoforge:${neo_version}"
+    implementation "net.neoforged:forge:${forge_version}"
 }
 
 tasks.withType(ProcessResources).configureEach {
