@@ -67,7 +67,9 @@ jobs:
           else
             html="$(curl --fail --silent --show-error "https://maven.neoforged.net/releases/net/neoforged/neoforge/")"
             if [[ "$BUILD" == 1.* ]]; then prefix="${BUILD#1.}."; else prefix="$BUILD."; fi
-            neo="$(printf '%s' "$html" | grep -oE 'href="[^"]+/"' | sed 's#.*href="##;s#/"$##' | grep -F "$prefix" | sort -V | tail -n1)"
+            neo="$(printf '%s' "$html" | grep -oE 'href="[^"]+/"' | sed 's#.*href="##;s#/"$##;s#^\./##;s#^\.\./##' | grep -F "$prefix" | sort -V | tail -n1)"
+            neo="${neo#./}"
+            neo="${neo#../}"
             test -n "$neo"
             echo "neo=$neo" >> "$GITHUB_OUTPUT"
           fi
