@@ -1,4 +1,5 @@
 name: Build & Release all NeoForge versions
+
 on:
   push:
     branches: [main]
@@ -8,135 +9,221 @@ on:
         description: Netflared mod release version
         required: true
         default: "1.3.9"
+
 permissions:
   contents: write
 
+env:
+  RELEASE_VERSION: ${{ inputs.release_version || '1.3.9' }}
+
 jobs:
   build:
-    name: Build NeoForge ${{ matrix.version }}
+    name: Build Minecraft ${{ matrix.version }}
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
       matrix:
         include:
-          - { version: "1.20", build: "1.20.1", group: "1.20", java: "17", legacy: true }
-          - { version: "1.20.1", build: "1.20.1", group: "1.20", java: "17", legacy: true }
-          - { version: "1.20.2", build: "1.20.2", group: "1.20", java: "17", legacy: false }
-          - { version: "1.20.3", build: "1.20.3", group: "1.20", java: "17", legacy: false }
-          - { version: "1.20.4", build: "1.20.4", group: "1.20", java: "17", legacy: false }
-          - { version: "1.20.5", build: "1.20.5", group: "1.20", java: "21", legacy: false }
-          - { version: "1.20.6", build: "1.20.6", group: "1.20", java: "21", legacy: false }
-          - { version: "1.21", build: "1.21", group: "1.21", java: "21", legacy: false }
-          - { version: "1.21.1", build: "1.21.1", group: "1.21", java: "21", legacy: false }
-          - { version: "1.21.2", build: "1.21.2", group: "1.21", java: "21", legacy: false }
-          - { version: "1.21.3", build: "1.21.3", group: "1.21", java: "21", legacy: false }
-          - { version: "1.21.4", build: "1.21.4", group: "1.21", java: "21", legacy: false }
-          - { version: "1.21.5", build: "1.21.5", group: "1.21", java: "21", legacy: false }
-          - { version: "1.21.6", build: "1.21.6", group: "1.21", java: "21", legacy: false }
-          - { version: "1.21.7", build: "1.21.7", group: "1.21", java: "21", legacy: false }
-          - { version: "1.21.8", build: "1.21.8", group: "1.21", java: "21", legacy: false }
-          - { version: "1.21.9", build: "1.21.9", group: "1.21", java: "21", legacy: false }
-          - { version: "1.21.10", build: "1.21.10", group: "1.21", java: "21", legacy: false }
-          - { version: "1.21.11", build: "1.21.11", group: "1.21", java: "21", legacy: false }
-          - { version: "26.0", build: "26.0", group: "26", java: "25", legacy: false }
-          - { version: "26.1", build: "26.1", group: "26", java: "25", legacy: false }
-          - { version: "26.1.1", build: "26.1", group: "26", java: "25", legacy: false }
-          - { version: "26.1.2", build: "26.1.2", group: "26", java: "25", legacy: false }
-          - { version: "26.2", build: "26.2", group: "26", java: "25", legacy: false }
+          - { version: "1.20", java: "17", mc: "1.20.1", legacy: true }
+          - { version: "1.20.1", java: "17", mc: "1.20.1", legacy: true }
+          - { version: "1.20.2", java: "17", mc: "1.20.2", legacy: false }
+          - { version: "1.20.3", java: "17", mc: "1.20.3", legacy: false }
+          - { version: "1.20.4", java: "17", mc: "1.20.4", legacy: false }
+          - { version: "1.20.5", java: "21", mc: "1.20.5", legacy: false }
+          - { version: "1.20.6", java: "21", mc: "1.20.6", legacy: false }
+          - { version: "1.21", java: "21", mc: "1.21", legacy: false }
+          - { version: "1.21.1", java: "21", mc: "1.21.1", legacy: false }
+          - { version: "1.21.2", java: "21", mc: "1.21.2", legacy: false }
+          - { version: "1.21.3", java: "21", mc: "1.21.3", legacy: false }
+          - { version: "1.21.4", java: "21", mc: "1.21.4", legacy: false }
+          - { version: "1.21.5", java: "21", mc: "1.21.5", legacy: false }
+          - { version: "1.21.6", java: "21", mc: "1.21.6", legacy: false }
+          - { version: "1.21.7", java: "21", mc: "1.21.7", legacy: false }
+          - { version: "1.21.8", java: "21", mc: "1.21.8", legacy: false }
+          - { version: "1.21.9", java: "21", mc: "1.21.9", legacy: false }
+          - { version: "1.21.10", java: "21", mc: "1.21.10", legacy: false }
+          - { version: "1.21.11", java: "21", mc: "1.21.11", legacy: false }
+          - { version: "26.1", java: "25", mc: "26.1", legacy: false }
+          - { version: "26.1.1", java: "25", mc: "26.1.1", legacy: false }
+          - { version: "26.1.2", java: "25", mc: "26.1.2", legacy: false }
+          - { version: "26.2", java: "25", mc: "26.2", legacy: false }
+
     steps:
-      - uses: actions/checkout@v7
+      - name: Checkout version branch
+        uses: actions/checkout@v5
         with:
           ref: ${{ matrix.version }}
-      - uses: actions/setup-java@v5
+          fetch-depth: 1
+
+      - name: Set up Java
+        uses: actions/setup-java@v5
         with:
           distribution: temurin
           java-version: ${{ matrix.java }}
-      - uses: gradle/actions/setup-gradle@v6
+
+      - name: Set up Gradle
+        uses: gradle/actions/setup-gradle@v6
         with:
           gradle-version: "9.6.1"
-      - name: Resolve dependency
+
+      - name: Resolve NeoForge version
         id: deps
         env:
-          BUILD: ${{ matrix.build }}
+          MC: ${{ matrix.mc }}
           LEGACY: ${{ matrix.legacy }}
+        shell: bash
         run: |
           set -euo pipefail
-          if [ "$LEGACY" = "true" ]; then
+
+          if [[ "$LEGACY" == "true" ]]; then
             echo "neo=47.1.106" >> "$GITHUB_OUTPUT"
             echo "forge=1.20.1-47.1.106" >> "$GITHUB_OUTPUT"
-          else
-            html="$(curl --fail --silent --show-error "https://maven.neoforged.net/releases/net/neoforged/neoforge/")"
-            if [[ "$BUILD" == 1.* ]]; then prefix="${BUILD#1.}."; else prefix="$BUILD."; fi
-            neo="$(printf '%s' "$html" | grep -oE 'href="[^"]+/"' | sed 's#.*href="##;s#/"$##;s#^\./##;s#^\.\./##' | grep -F "$prefix" | sort -V | tail -n1)"
-            neo="${neo#./}"
-            neo="${neo#../}"
-            test -n "$neo"
-            echo "neo=$neo" >> "$GITHUB_OUTPUT"
+            exit 0
           fi
+
+          # NeoForge's version prefix follows the Minecraft version:
+          # 1.20.x -> 20.x, 1.21.x -> 21.x, 26.1.x -> 26.1.x, etc.
+          if [[ "$MC" == 1.* ]]; then
+            prefix="${MC#1.}."
+          else
+            prefix="$MC."
+          fi
+
+          index="$(curl --fail --silent --show-error --retry 3             https://maven.neoforged.net/releases/net/neoforged/neoforge/)"
+
+          versions="$(
+            printf '%s' "$index" |
+              grep -oE 'href="[^"]+/"' |
+              sed -E 's/^href="([^"]+)\/"$/\1/' |
+              grep -E "^$prefix[0-9]+(/|-beta/|-alpha/)" |
+              sed -E 's#/$##' |
+              grep -vE '(-alpha|-rc)/$' |
+              sort -V
+          )"
+
+          # Prefer a stable release. If a Minecraft line only has beta
+          # NeoForge builds, use the newest beta for that line.
+          stable="$(printf '%s\n' "$versions" | grep -v -- '-' | tail -n1 || true)"
+          if [[ -n "$stable" ]]; then
+            neo="$stable"
+          else
+            neo="$(printf '%s\n' "$versions" | grep -- '-beta$' | tail -n1 || true)"
+          fi
+
+          test -n "$neo"
+          echo "Resolved NeoForge $neo for Minecraft $MC"
+          echo "neo=$neo" >> "$GITHUB_OUTPUT"
+
       - name: Build
         env:
           VERSION: ${{ matrix.version }}
-          BUILD: ${{ matrix.build }}
-          RELEASE: ${{ inputs.release_version || '1.3.9' }}
+          MC: ${{ matrix.mc }}
           NEO: ${{ steps.deps.outputs.neo }}
           FORGE: ${{ steps.deps.outputs.forge }}
           LEGACY: ${{ matrix.legacy }}
+          RELEASE: ${{ env.RELEASE_VERSION }}
+        shell: bash
         run: |
           set -euo pipefail
-          if [ "$LEGACY" = "true" ]; then
-            gradle clean build --no-daemon --stacktrace --refresh-dependencies "-Pmod_version=$RELEASE" "-Pminecraft_version=$BUILD" "-Pneo_version=$NEO" "-Pforge_version=$FORGE"
+
+          # Do not run NeoGradle's NeoForm stages in parallel in CI.
+          # This avoids the known access-transformer/cache race class.
+          common=(
+            clean build
+            --no-daemon
+            --no-parallel
+            --no-configuration-cache
+            --stacktrace
+            --refresh-dependencies
+            "-Pmod_version=$RELEASE"
+            "-Pminecraft_version=$MC"
+            "-Pneo_version=$NEO"
+          )
+
+          if [[ "$LEGACY" == "true" ]]; then
+            gradle "${common[@]}" "-Pforge_version=$FORGE"
           else
-            gradle clean build --no-daemon --stacktrace --refresh-dependencies "-Pmod_version=$RELEASE" "-Pminecraft_version=$BUILD" "-Pneo_version=$NEO"
+            gradle "${common[@]}"
           fi
-          mapfile -d '' jars < <(find build/libs -maxdepth 1 -type f -name '*.jar' ! -name '*sources*' ! -name '*dev*' ! -name '*javadoc*' -print0)
+
+          mapfile -d '' jars < <(
+            find build/libs -maxdepth 1 -type f -name '*.jar' \
+              ! -name '*sources*' \
+              ! -name '*dev*' \
+              ! -name '*javadoc*' \
+              -print0
+          )
+
           test "${#jars[@]}" -eq 1
           cp "${jars[0]}" "netflared-neo-$VERSION.jar"
           test -s "netflared-neo-$VERSION.jar"
-      - uses: actions/upload-artifact@v4
+
+      - name: Upload version JAR
+        uses: actions/upload-artifact@v4
         with:
-          name: neo-${{ matrix.group }}-${{ matrix.version }}
+          name: neo-${{ matrix.version }}
           path: netflared-neo-${{ matrix.version }}.jar
           if-no-files-found: error
 
   verify:
-    name: Verify all JARs
+    name: Verify complete JAR set
     needs: build
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/download-artifact@v5
+      - name: Download all JARs
+        uses: actions/download-artifact@v5
         with:
           pattern: neo-*
           path: jars
           merge-multiple: true
-      - name: Check complete set
+
+      - name: Verify every version
+        shell: bash
         run: |
           set -euo pipefail
-          expected="1.20 1.20.1 1.20.2 1.20.3 1.20.4 1.20.5 1.20.6 1.21 1.21.1 1.21.2 1.21.3 1.21.4 1.21.5 1.21.6 1.21.7 1.21.8 1.21.9 1.21.10 1.21.11 26.0 26.1 26.1.1 26.1.2 26.2"
-          count=0
-          for v in $expected; do
-            test -s "jars/netflared-neo-$v.jar"
-            count=$((count + 1))
+          expected=(
+            1.20 1.20.1 1.20.2 1.20.3 1.20.4 1.20.5 1.20.6
+            1.21 1.21.1 1.21.2 1.21.3 1.21.4 1.21.5 1.21.6
+            1.21.7 1.21.8 1.21.9 1.21.10 1.21.11
+            26.1 26.1.1 26.1.2 26.2
+          )
+
+          for version in "${expected[@]}"; do
+            test -s "jars/netflared-neo-$version.jar"
           done
+
           actual="$(find jars -maxdepth 1 -type f -name '*.jar' | wc -l)"
-          test "$actual" -eq "$count"
-          echo "Verified $count/$count version JARs."
+          test "$actual" -eq "${#expected[@]}"
+          echo "Verified ${#expected[@]}/${#expected[@]} JARs."
 
   release:
-    name: Release NeoForge ${{ matrix.group }}
+    name: Release Minecraft ${{ matrix.group }}
     needs: verify
     runs-on: ubuntu-latest
     strategy:
+      fail-fast: false
       matrix:
         group: ["1.20", "1.21", "26"]
+
     steps:
-      - uses: actions/download-artifact@v5
+      - name: Download release group
+        uses: actions/download-artifact@v5
         with:
-          pattern: neo-${{ matrix.group }}-*
+          pattern: neo-${{ matrix.group }}*
           path: grouped
           merge-multiple: true
-      - uses: softprops/action-gh-release@v3
+
+      - name: Verify release group is not empty
+        shell: bash
+        run: |
+          set -euo pipefail
+          find grouped -maxdepth 1 -type f -name '*.jar' -print -quit | grep -q .
+
+      - name: Publish GitHub release
+        uses: softprops/action-gh-release@v3
         with:
-          tag_name: v${{ inputs.release_version || '1.3.9' }}-neo-${{ matrix.group }}
-          name: Netflared ${{ inputs.release_version || '1.3.9' }} — NeoForge ${{ matrix.group }}
+          tag_name: v${{ env.RELEASE_VERSION }}-neo-${{ matrix.group }}
+          name: Netflared ${{ env.RELEASE_VERSION }} — NeoForge ${{ matrix.group }}
           generate_release_notes: false
+          fail_on_unmatched_files: true
           files: grouped/*.jar
