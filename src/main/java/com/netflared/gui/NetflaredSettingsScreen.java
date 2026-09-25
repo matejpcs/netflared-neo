@@ -6,7 +6,7 @@ import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.components.EditBox;
 import net.minecraft.client.gui.screens.Screen;
-import net.neoforged.fml.loading.FMLPaths;
+import java.nio.file.Path;
 import net.minecraft.network.chat.Component;
 
 import java.util.ArrayList;
@@ -88,7 +88,7 @@ public class NetflaredSettingsScreen extends Screen {
     private void saveAndStay() {
         try {
             NetflaredMod.getConfig().save(
-                    FMLPaths.CONFIGDIR.get().resolve(NetflaredMod.MOD_ID));
+                    Path.of("config").resolve(NetflaredMod.MOD_ID));
             showFeedback(NetflaredMod.tr("netflared.settings.saved"), 0xFF55FF88);
         } catch (Exception e) {
             NetflaredMod.LOGGER.error("[Netflared] Failed to save settings", e);
