@@ -89,23 +89,29 @@ jobs:
             prefix="$MC."
           fi
 
-          index="$(curl --fail --silent --show-error --retry 3             https://maven.neoforged.net/releases/net/neoforged/neoforge/)"
+          metadata="$(curl --fail --silent --show-error --retry 3 \
+            https://maven.neoforged.net/releases/net/neoforged/neoforge/maven-metadata.xml
+          )"
 
-          # Maven directory listings contain one href per NeoForge version.
-          # Keep the pipeline tolerant of a line having no stable/prerelease match,
-          # then fail explicitly with the Minecraft version and prefix.
+          # Read Maven's version list instead of scraping the HTML directory index.
+          # This is stable even if the repository changes its HTML formatting.
           versions="$(
-            printf '%s' "$index" |
-              grep -oE 'href="[^"]+/"' |
-              sed -E 's/^href="([^"]+)\/"$/\1/' |
+            printf '%s' "$metadata" |
+              grep -oE '<version>[^<]+</version>' |
+              sed -E 's#</?version>##g' |
               grep -E "^$prefix[0-9]+(-beta|-alpha|-rc)?$" || true
           )"
+
+          if [[ -z "$versions" ]]; then
+            echo "::error::No NeoForge version found for Minecraft $MC (prefix $prefix)"
+            exit 1
+          fi
 
           stable="$(printf '%s\n' "$versions" | grep -E '^[0-9.]+$' | sort -V | tail -n1 || true)"
           if [[ -n "$stable" ]]; then
             neo="$stable"
           else
-            neo="$(printf '%s\\n' "$versions" | grep -E -- '-(beta|alpha|rc)[0-9]*$' | sort -V | tail -n1 || true)"
+            neo="$(printf '%s\n' "$versions" | grep -E -- '-(beta|alpha|rc)[0-9]*$' | sort -V | tail -n1 || true)"
           fi
 
           test -n "$neo"
