@@ -97,11 +97,11 @@ jobs:
           versions="$(
             printf '%s' "$index" |
               grep -oE 'href="[^"]+/"' |
-              sed -E 's/^href="([^"]+)\\/"$/\\1/' |
+              sed -E 's/^href="([^"]+)\/"$/\1/' |
               grep -E "^$prefix[0-9]+(-beta|-alpha|-rc)?$" || true
           )"
 
-          stable="$(printf '%s\\n' "$versions" | grep -E '^[0-9.]+$' | sort -V | tail -n1 || true)"
+          stable="$(printf '%s\n' "$versions" | grep -E '^[0-9.]+$' | sort -V | tail -n1 || true)"
           if [[ -n "$stable" ]]; then
             neo="$stable"
           else
