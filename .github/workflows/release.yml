@@ -67,8 +67,7 @@ jobs:
           else
             metadata="$(curl --fail --silent --show-error "https://maven.neoforged.net/releases/net/neoforged/neoforge/maven-metadata.xml")"
             if [[ "$BUILD" == 1.* ]]; then prefix="${BUILD#1.}."; else prefix="$BUILD."; fi
-            escaped_prefix="$(printf '%s' "$prefix" | sed 's/[.[\\\\*^$()+?{|]/\\\\&/g')"
-            neo="$(printf '%s' "$metadata" | grep -oE "<version>[^<]+</version>" | sed 's#<version>##;s#</version>##' | sed 's#</version>##' | grep -E "^${escaped_prefix}" | sort -V | tail -n1)"
+            neo="$(printf '%s' "$metadata" | grep -oE "<version>[^<]+</version>" | sed 's#<version>##;s#</version>##' | grep -F "$prefix" | sort -V | tail -n1)"
             test -n "$neo"
             echo "neo=$neo" >> "$GITHUB_OUTPUT"
           fi
