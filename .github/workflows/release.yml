@@ -76,7 +76,7 @@ jobs:
           set -euo pipefail
 
           if [[ "$LEGACY" == "true" ]]; then
-            echo "neo=47.1.106" >> "$GITHUB_OUTPUT"
+            echo "neo=1.20.1-47.1.106" >> "$GITHUB_OUTPUT"
             echo "forge=1.20.1-47.1.106" >> "$GITHUB_OUTPUT"
             exit 0
           fi
