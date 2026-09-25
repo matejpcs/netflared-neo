@@ -91,21 +91,21 @@ jobs:
 
           index="$(curl --fail --silent --show-error --retry 3             https://maven.neoforged.net/releases/net/neoforged/neoforge/)"
 
+          # Maven directory listings contain one href per NeoForge version.
+          # Keep the pipeline tolerant of a line having no stable/prerelease match,
+          # then fail explicitly with the Minecraft version and prefix.
           versions="$(
             printf '%s' "$index" |
               grep -oE 'href="[^"]+/"' |
-              sed -E 's/^href="([^"]+)\/"$/\1/' |
-              grep -E "^$prefix[0-9]+(-beta|-alpha|-rc)?$" |
-              sort -V
+              sed -E 's/^href="([^"]+)\\/"$/\\1/' |
+              grep -E "^$prefix[0-9]+(-beta|-alpha|-rc)?$" || true
           )"
 
-          # Prefer a stable release. If a Minecraft line only has beta
-          # NeoForge builds, use the newest beta for that line.
-          stable="$(printf '%s\n' "$versions" | grep -v -- '-' | tail -n1 || true)"
+          stable="$(printf '%s\\n' "$versions" | grep -E '^[0-9.]+$' | sort -V | tail -n1 || true)"
           if [[ -n "$stable" ]]; then
             neo="$stable"
           else
-            neo="$(printf '%s\n' "$versions" | grep -- '-beta$' | tail -n1 || true)"
+            neo="$(printf '%s\\n' "$versions" | grep -E -- '-(beta|alpha|rc)[0-9]*$' | sort -V | tail -n1 || true)"
           fi
 
           test -n "$neo"
