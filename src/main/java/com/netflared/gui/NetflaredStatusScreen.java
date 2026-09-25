@@ -146,7 +146,7 @@ public class NetflaredStatusScreen extends Screen {
                     ServerAddress address = ServerAddress.parseString(profile.getJoinAddress());
                     ServerData data = new ServerData(
                             profile.name, profile.getJoinAddress(), ServerData.Type.OTHER);
-                    ConnectScreen.startConnecting(this, minecraft, address, data, false, null);
+                    ConnectScreen.startConnecting(this, minecraft, address, data, false);
                 })
                 .bounds(centerX + 5, centerY + 50, 100, 20).build();
         joinButton.visible = state == State.SUCCESS;
