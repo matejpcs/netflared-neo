@@ -11,7 +11,7 @@ import net.minecraft.client.gui.screens.TitleScreen;
 import net.minecraft.client.gui.screens.multiplayer.JoinMultiplayerScreen;
 import net.minecraftforge.eventbus.api.IEventBus;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
-import net.minecraftforge.fml.ModContainer;
+import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.loading.FMLPaths;
 import net.minecraftforge.client.event.ClientTickEvent;
@@ -80,7 +80,8 @@ public class NetflaredMod {
     public static void refreshTranslations(){Translations.refreshIfChanged();}
     public static net.minecraft.network.chat.Component tr(String key,Object...args){return net.minecraft.network.chat.Component.literal(Translations.text(key,args));}
 
-    public NetflaredMod(IEventBus modBus,ModContainer container){
+    public NetflaredMod(FMLJavaModLoadingContext context){
+        IEventBus modBus=context.getModEventBus();
         INSTANCE=this;Path dir=FMLPaths.CONFIGDIR.get().resolve(MOD_ID);config=NetflaredConfig.load(dir);tunnelManager=new TunnelManager(dir);tunnelManager.killOrphanedTunnels();Translations.refresh();
         Runtime.getRuntime().addShutdownHook(new Thread(()->{try{if(tunnelManager!=null)tunnelManager.forceStopAll();}catch(Throwable ignored){}}, "netflared-shutdown"));
         modBus.addListener(NetflaredMod::registerKeyMappings);MinecraftForge.EVENT_BUS.register(NetflaredMod.class);
