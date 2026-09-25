@@ -1,0 +1,26 @@
+modLoader="javafml"
+loaderVersion="[47,)"
+license="MIT"
+issueTrackerURL="https://github.com/matejpcs/netflared/issues"
+
+[[mods]]
+modId="netflared"
+version="${mod_version}"
+displayName="Netflared"
+authors="MatějPCs"
+description='''Client-side Cloudflare Access tunnel manager for Minecraft.'''
+displayTest="IGNORE_ALL_VERSION"
+
+[[dependencies.netflared]]
+modId="forge"
+mandatory=true
+versionRange="[47,)"
+ordering="NONE"
+side="CLIENT"
+
+[[dependencies.netflared]]
+modId="minecraft"
+mandatory=true
+versionRange="${minecraft_version_range}"
+ordering="NONE"
+side="CLIENT"
