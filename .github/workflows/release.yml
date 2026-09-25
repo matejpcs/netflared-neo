@@ -99,7 +99,7 @@ jobs:
             printf '%s' "$metadata" |
               grep -oE '<version>[^<]+</version>' |
               sed -E 's#</?version>##g' |
-              grep -E "^$prefix[0-9]+(-beta|-alpha|-rc)?$" || true
+              grep -E "^$prefix[0-9]+(\\.[0-9]+)*(-beta|-alpha|-rc)[0-9]*$|^$prefix[0-9]+(\\.[0-9]+)*$" || true
           )"
 
           if [[ -z "$versions" ]]; then
@@ -107,7 +107,131 @@ jobs:
             exit 1
           fi
 
-          stable="$(printf '%s\n' "$versions" | grep -E '^[0-9.]+$' | sort -V | tail -n1 || true)"
+          stable="$(printf '%s\n' "$versions" | grep -E '^[0-9]+(\.[0-9]+)* | sort -V | tail -n1 || true)"
+          if [[ -n "$stable" ]]; then
+            neo="$stable"
+          else
+            neo="$(printf '%s\n' "$versions" | grep -E -- '-(beta|alpha|rc)[0-9]*$' | sort -V | tail -n1 || true)"
+          fi
+
+          test -n "$neo"
+          echo "Resolved NeoForge $neo for Minecraft $MC"
+          echo "neo=$neo" >> "$GITHUB_OUTPUT"
+
+      - name: Build
+        env:
+          VERSION: ${{ matrix.version }}
+          MC: ${{ matrix.mc }}
+          NEO: ${{ steps.deps.outputs.neo }}
+          FORGE: ${{ steps.deps.outputs.forge }}
+          LEGACY: ${{ matrix.legacy }}
+          RELEASE: ${{ env.RELEASE_VERSION }}
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          # Do not run NeoGradle's NeoForm stages in parallel in CI.
+          # This avoids the known access-transformer/cache race class.
+          common=(
+            clean build
+            --no-daemon
+            --no-parallel
+            --no-configuration-cache
+            --stacktrace
+            --refresh-dependencies
+            "-Pmod_version=$RELEASE"
+            "-Pminecraft_version=$MC"
+            "-Pneo_version=$NEO"
+          )
+
+          if [[ "$LEGACY" == "true" ]]; then
+            gradle "${common[@]}" "-Pforge_version=$FORGE"
+          else
+            gradle "${common[@]}"
+          fi
+
+          mapfile -d '' jars < <(
+            find build/libs -maxdepth 1 -type f -name '*.jar' \
+              ! -name '*sources*' \
+              ! -name '*dev*' \
+              ! -name '*javadoc*' \
+              -print0
+          )
+
+          test "${#jars[@]}" -eq 1
+          cp "${jars[0]}" "netflared-neo-$VERSION.jar"
+          test -s "netflared-neo-$VERSION.jar"
+
+      - name: Upload version JAR
+        uses: actions/upload-artifact@v4
+        with:
+          name: neo-${{ matrix.version }}
+          path: netflared-neo-${{ matrix.version }}.jar
+          if-no-files-found: error
+
+  verify:
+    name: Verify complete JAR set
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download all JARs
+        uses: actions/download-artifact@v5
+        with:
+          pattern: neo-*
+          path: jars
+          merge-multiple: true
+
+      - name: Verify every version
+        shell: bash
+        run: |
+          set -euo pipefail
+          expected=(
+            1.20 1.20.1 1.20.2 1.20.3 1.20.4 1.20.5 1.20.6
+            1.21 1.21.1 1.21.2 1.21.3 1.21.4 1.21.5 1.21.6
+            1.21.7 1.21.8 1.21.9 1.21.10 1.21.11
+            26.1 26.1.1 26.1.2 26.2
+          )
+
+          for version in "${expected[@]}"; do
+            test -s "jars/netflared-neo-$version.jar"
+          done
+
+          actual="$(find jars -maxdepth 1 -type f -name '*.jar' | wc -l)"
+          test "$actual" -eq "${#expected[@]}"
+          echo "Verified ${#expected[@]}/${#expected[@]} JARs."
+
+  release:
+    name: Release Minecraft ${{ matrix.group }}
+    needs: verify
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        group: ["1.20", "1.21", "26"]
+
+    steps:
+      - name: Download release group
+        uses: actions/download-artifact@v5
+        with:
+          pattern: neo-${{ matrix.group }}*
+          path: grouped
+          merge-multiple: true
+
+      - name: Verify release group is not empty
+        shell: bash
+        run: |
+          set -euo pipefail
+          find grouped -maxdepth 1 -type f -name '*.jar' -print -quit | grep -q .
+
+      - name: Publish GitHub release
+        uses: softprops/action-gh-release@v3
+        with:
+          tag_name: v${{ env.RELEASE_VERSION }}-neo-${{ matrix.group }}
+          name: Netflared ${{ env.RELEASE_VERSION }} — NeoForge ${{ matrix.group }}
+          generate_release_notes: false
+          fail_on_unmatched_files: true
+          files: grouped/*.jar
+ | sort -V | tail -n1 || true)"
           if [[ -n "$stable" ]]; then
             neo="$stable"
           else
