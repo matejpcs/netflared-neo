@@ -1,23 +1,42 @@
 plugins {
     id 'java-library'
     id 'maven-publish'
-    id 'net.minecraftforge.gradle' version '[6.0,6.2)'
+    id 'net.neoforged.gradle.userdev' version '7.1.38'
 }
 version = mod_version
 group = mod_group_id
 base { archivesName = mod_id }
 java.toolchain.languageVersion = JavaLanguageVersion.of(17)
 repositories { mavenCentral() }
-minecraft {
-    mappings channel: 'official', version: minecraft_version
-    runs {
-        client { workingDirectory project.file('run'); mods { netflared { source sourceSets.main } } }
-        server { workingDirectory project.file('run'); args '--nogui'; mods { netflared { source sourceSets.main } } }
+
+runs {
+    client {
+        client()
+        systemProperty 'neoforge.enabledGameTestNamespaces', project.mod_id
+    }
+    server {
+        server()
+        systemProperty 'neoforge.enabledGameTestNamespaces', project.mod_id
+        argument '--nogui'
     }
 }
-dependencies { minecraft "net.minecraftforge:forge:" + forge_version }
+
+dependencies {
+    implementation "net.neoforged:forge:" + neo_version
+}
+
 tasks.withType(ProcessResources).configureEach {
-    def replaceProperties = [minecraft_version:minecraft_version, minecraft_version_range:minecraft_version_range, forge_version:forge_version, mod_id:mod_id, mod_name:mod_name, mod_license:mod_license, mod_version:mod_version, mod_authors:mod_authors, mod_description:mod_description]
+    def replaceProperties = [
+        minecraft_version: minecraft_version,
+        minecraft_version_range: minecraft_version_range,
+        neo_version: neo_version,
+        mod_id: mod_id,
+        mod_name: mod_name,
+        mod_license: mod_license,
+        mod_version: mod_version,
+        mod_authors: mod_authors,
+        mod_description: mod_description
+    ]
     inputs.properties replaceProperties
     filesMatching(['META-INF/mods.toml']) { expand replaceProperties }
 }
