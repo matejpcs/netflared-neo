@@ -107,7 +107,7 @@ jobs:
             exit 1
           fi
 
-          stable="$(printf '%s\\n' "$versions" | grep -E '^[0-9]+(\\.[0-9]+)*$' | sort -V | tail -n1 || true)"
+          stable="$(printf '%s\n' "$versions" | grep -E '^[0-9]+(\.[0-9]+)*$' | sort -V | tail -n1 || true)"
           if [[ -n "$stable" ]]; then
             neo="$stable"
           else
