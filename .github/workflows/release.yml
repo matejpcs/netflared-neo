@@ -95,9 +95,7 @@ jobs:
             printf '%s' "$index" |
               grep -oE 'href="[^"]+/"' |
               sed -E 's/^href="([^"]+)\/"$/\1/' |
-              grep -E "^$prefix[0-9]+(/|-beta/|-alpha/)" |
-              sed -E 's#/$##' |
-              grep -vE '(-alpha|-rc)/$' |
+              grep -E "^$prefix[0-9]+(-beta|-alpha|-rc)?$" |
               sort -V
           )"
 
