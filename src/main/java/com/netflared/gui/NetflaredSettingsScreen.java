@@ -105,15 +105,15 @@ public class NetflaredSettingsScreen extends Screen {
     private int feedbackColor = 0xFF55FF88;
 
     @Override
-    public boolean mouseScrolled(double mouseX, double mouseY, double deltaX, double deltaY) {
+    public boolean mouseScrolled(double mouseX, double mouseY, double delta) {
         if (mouseY >= LIST_TOP && mouseY <= LIST_BOTTOM) {
             int maxScroll = Math.max(0,
                     NetflaredMod.getConfig().getProfiles().size() * ROW_HEIGHT - (LIST_BOTTOM - LIST_TOP));
-            scrollOffset = (int) Math.max(0, Math.min(maxScroll, scrollOffset - deltaY * ROW_HEIGHT));
+            scrollOffset = (int) Math.max(0, Math.min(maxScroll, scrollOffset - delta * ROW_HEIGHT));
             rebuildProfileWidgets();
             return true;
         }
-        return super.mouseScrolled(mouseX, mouseY, deltaX, deltaY);
+        return super.mouseScrolled(mouseX, mouseY, delta);
     }
 
     @Override
