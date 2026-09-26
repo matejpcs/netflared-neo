@@ -2,7 +2,7 @@ package com.netflared.gui;
 
 import com.netflared.NetflaredMod;
 import com.netflared.config.NetflaredConfig;
-import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.components.EditBox;
 import net.minecraft.client.gui.screens.Screen;
@@ -117,14 +117,14 @@ public class NetflaredSettingsScreen extends Screen {
     }
 
     @Override
-    public void render(GuiGraphics graphics, int mouseX, int mouseY, float delta) {
-        super.render(graphics, mouseX, mouseY, delta);
+    public void extractRenderState(GuiGraphicsExtractor graphics, int mouseX, int mouseY, float delta) {
+        super.extractRenderState(graphics, mouseX, mouseY, delta);
 
         int centerX = width / 2;
-        graphics.drawString(font, title, centerX - font.width(title) / 2, 15, 0xFF55FFFF, true);
-        graphics.drawString(font, NetflaredMod.tr("netflared.settings.name"), centerX - 170, 31, 0xFFFFD166, false);
-        graphics.drawString(font, NetflaredMod.tr("netflared.settings.domain"), centerX - 85, 31, 0xFFB8A1FF, false);
-        graphics.drawString(font, NetflaredMod.tr("netflared.settings.port"), centerX + 55, 31, 0xFF63D7FF, false);
+        graphics.text(font, title, centerX - font.width(title) / 2, 15, 0xFF55FFFF, true);
+        graphics.text(font, NetflaredMod.tr("netflared.settings.name"), centerX - 170, 31, 0xFFFFD166, false);
+        graphics.text(font, NetflaredMod.tr("netflared.settings.domain"), centerX - 85, 31, 0xFFB8A1FF, false);
+        graphics.text(font, NetflaredMod.tr("netflared.settings.port"), centerX + 55, 31, 0xFF63D7FF, false);
 
         for (ProfileWidget pw : profileWidgets) {
             if (pw.y + ROW_HEIGHT > LIST_TOP && pw.y < LIST_BOTTOM) {
@@ -146,7 +146,7 @@ public class NetflaredSettingsScreen extends Screen {
 
         if (feedbackMessage != null && System.currentTimeMillis() < feedbackUntil) {
             int y = height - 68;
-            graphics.drawString(font, feedbackMessage, centerX - font.width(feedbackMessage) / 2, y, feedbackColor, true);
+            graphics.text(font, feedbackMessage, centerX - font.width(feedbackMessage) / 2, y, feedbackColor, true);
         } else if (feedbackMessage != null) {
             feedbackMessage = null;
         }
