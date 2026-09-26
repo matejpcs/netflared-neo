@@ -66,23 +66,16 @@ jobs:
         with:
           gradle-version: ${{ matrix.legacy && '8.14.5' || '9.6.1' }}
 
-      - name: Resolve build dependency versions
-        id: deps
+      - name: Validate branch build metadata
         shell: bash
         run: |
           set -euo pipefail
-          mc="$(grep '^minecraft_version=' gradle.properties | cut -d= -f2-)"
-          neo="$(grep '^neo_version=' gradle.properties | cut -d= -f2- || true)"
-          forge="$(grep '^forge_version=' gradle.properties | cut -d= -f2- || true)"
-          test -n "$mc"
-          if [[ -z "$neo" && -z "$forge" ]]; then
-            echo "::error::No neo_version or forge_version in gradle.properties for $mc"
-            exit 1
-          fi
-          echo "minecraft=$mc" >> "$GITHUB_OUTPUT"
-          [[ -n "$neo" ]] && echo "neo=$neo" >> "$GITHUB_OUTPUT"
-          [[ -n "$forge" ]] && echo "forge=$forge" >> "$GITHUB_OUTPUT"
-          echo "Using Minecraft $mc; NeoForge=${neo:-n/a}; Forge=${forge:-n/a}"
+          actual_mc="$(grep '^minecraft_version=' gradle.properties | cut -d= -f2-)"
+          expected_mc="${{ matrix.mc }}"
+          test "$actual_mc" = "$expected_mc"
+          grep -q '^neo_version=' gradle.properties
+          test -n "$(grep '^neo_version=' gradle.properties | cut -d= -f2-)"
+          echo "Branch ${{ matrix.version }} -> Minecraft $actual_mc -> NeoForge $(grep '^neo_version=' gradle.properties | cut -d= -f2-)"
 
       - name: Build
         env:
