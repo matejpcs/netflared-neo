@@ -15,6 +15,7 @@ import net.neoforged.fml.ModContainer;
 import net.neoforged.fml.common.Mod;
 import net.neoforged.fml.loading.FMLPaths;
 import net.neoforged.neoforge.client.event.RegisterKeyMappingsEvent;
+import net.neoforged.neoforge.event.TickEvent.ClientTickEvent;
 import net.neoforged.neoforge.client.event.ScreenEvent;
 import net.neoforged.neoforge.common.NeoForge;
 import org.lwjgl.glfw.GLFW;
@@ -85,5 +86,6 @@ public class NetflaredMod {
         modBus.addListener(NetflaredMod::registerKeyMappings);NeoForge.EVENT_BUS.register(NetflaredMod.class);
     }
     private static void registerKeyMappings(RegisterKeyMappingsEvent e){openTunnelKey=new KeyMapping("key.netflared.open_tunnel_ui",InputConstants.Type.KEYSYM,GLFW.GLFW_KEY_F9,"key.categories.netflared");e.register(openTunnelKey);}
+    @SubscribeEvent public static void onClientTick(ClientTickEvent e){if(e.phase != net.neoforged.neoforge.event.TickEvent.Phase.END)return;Minecraft c=Minecraft.getInstance();Translations.refreshIfChanged();if(openTunnelKey==null)return;while(openTunnelKey.consumeClick()){Screen s=c.screen;if(s instanceof TitleScreen||s instanceof JoinMultiplayerScreen)c.setScreen(new NetflaredSettingsScreen(s));}}
     @SubscribeEvent public static void onScreenInit(ScreenEvent.Init.Post e){if(!(e.getScreen() instanceof JoinMultiplayerScreen s))return;e.addListener(net.minecraft.client.gui.components.Button.builder(tr("netflared.button.label"),b->Minecraft.getInstance().setScreen(new NetflaredSettingsScreen(s))).bounds(5,5,80,20).build());}
 }
