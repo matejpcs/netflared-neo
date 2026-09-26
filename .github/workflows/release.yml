@@ -66,62 +66,28 @@ jobs:
         with:
           gradle-version: ${{ matrix.legacy && '8.14.5' || '9.6.1' }}
 
-      - name: Resolve NeoForge version
+      - name: Resolve build dependency versions
         id: deps
-        env:
-          MC: ${{ matrix.mc }}
-          LEGACY: ${{ matrix.legacy }}
         shell: bash
         run: |
           set -euo pipefail
-
-          if [[ "$LEGACY" == "true" ]]; then
-            echo "neo=1.20.1-47.1.106" >> "$GITHUB_OUTPUT"
-            echo "forge=1.20.1-47.1.106" >> "$GITHUB_OUTPUT"
-            exit 0
-          fi
-
-          # NeoForge's version prefix follows the Minecraft version:
-          # 1.20.x -> 20.x, 1.21.x -> 21.x, 26.1.x -> 26.1.x, etc.
-          if [[ "$MC" == 1.* ]]; then
-            prefix="${MC#1.}."
-          else
-            prefix="$MC."
-          fi
-
-          metadata="$(curl --fail --silent --show-error --retry 3 \
-            https://maven.neoforged.net/releases/net/neoforged/neoforge/maven-metadata.xml
-          )"
-
-          # Read Maven's version list instead of scraping the HTML directory index.
-          # This is stable even if the repository changes its HTML formatting.
-          versions="$(
-            printf '%s' "$metadata" |
-              grep -oE '<version>[^<]+</version>' |
-              sed -E 's#</?version>##g' |
-              grep -E "^$prefix[0-9]+(\\.[0-9]+)*(-beta|-alpha|-rc)[0-9]*$|^$prefix[0-9]+(\\.[0-9]+)*$" || true
-          )"
-
-          if [[ -z "$versions" ]]; then
-            echo "::error::No NeoForge version found for Minecraft $MC (prefix $prefix)"
+          mc="$(grep '^minecraft_version=' gradle.properties | cut -d= -f2-)"
+          neo="$(grep '^neo_version=' gradle.properties | cut -d= -f2- || true)"
+          forge="$(grep '^forge_version=' gradle.properties | cut -d= -f2- || true)"
+          test -n "$mc"
+          if [[ -z "$neo" && -z "$forge" ]]; then
+            echo "::error::No neo_version or forge_version in gradle.properties for $mc"
             exit 1
           fi
-
-          stable="$(printf '%s\n' "$versions" | grep -E '^[0-9]+(\.[0-9]+)*$' | sort -V | tail -n1 || true)"
-          if [[ -n "$stable" ]]; then
-            neo="$stable"
-          else
-            neo="$(printf '%s\n' "$versions" | grep -E -- '-(beta|alpha|rc)[0-9]*$' | sort -V | tail -n1 || true)"
-          fi
-
-          test -n "$neo"
-          echo "Resolved NeoForge $neo for Minecraft $MC"
-          echo "neo=$neo" >> "$GITHUB_OUTPUT"
+          echo "minecraft=$mc" >> "$GITHUB_OUTPUT"
+          [[ -n "$neo" ]] && echo "neo=$neo" >> "$GITHUB_OUTPUT"
+          [[ -n "$forge" ]] && echo "forge=$forge" >> "$GITHUB_OUTPUT"
+          echo "Using Minecraft $mc; NeoForge=${neo:-n/a}; Forge=${forge:-n/a}"
 
       - name: Build
         env:
           VERSION: ${{ matrix.version }}
-          MC: ${{ matrix.mc }}
+          MC: ${{ steps.deps.outputs.minecraft }}
           NEO: ${{ steps.deps.outputs.neo }}
           FORGE: ${{ steps.deps.outputs.forge }}
           LEGACY: ${{ matrix.legacy }}
