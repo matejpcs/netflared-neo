@@ -1,28 +1,34 @@
 plugins {
     id 'java-library'
     id 'maven-publish'
-    id 'net.neoforged.gradle.userdev' version '7.1.39'
+    id 'net.neoforged.moddev' version '2.0.147'
 }
+
 version = mod_version
 group = mod_group_id
 base { archivesName = mod_id }
+
 java.toolchain.languageVersion = JavaLanguageVersion.of(21)
 repositories { mavenCentral() }
 
-runs {
-    client {
-        client()
-        systemProperty 'neoforge.enabledGameTestNamespaces', project.mod_id
-    }
-    server {
-        server()
-        systemProperty 'neoforge.enabledGameTestNamespaces', project.mod_id
-        argument '--nogui'
-    }
-}
+neoForge {
+    version = neo_version
 
-dependencies {
-    implementation "net.neoforged:neoforge:${neo_version}"
+    runs {
+        client {
+            client()
+        }
+        server {
+            server()
+            programArgument '--nogui'
+        }
+    }
+
+    mods {
+        netflared {
+            sourceSet sourceSets.main
+        }
+    }
 }
 
 tasks.withType(ProcessResources).configureEach {
@@ -41,4 +47,7 @@ tasks.withType(ProcessResources).configureEach {
     inputs.properties replaceProperties
     filesMatching(['META-INF/neoforge.mods.toml']) { expand replaceProperties }
 }
-tasks.withType(JavaCompile).configureEach { options.encoding = 'UTF-8' }
+
+tasks.withType(JavaCompile).configureEach {
+    options.encoding = 'UTF-8'
+}
