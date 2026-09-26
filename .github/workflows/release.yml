@@ -27,7 +27,7 @@ jobs:
     timeout-minutes: 20
     strategy:
       fail-fast: false
-      max-parallel: 8
+      max-parallel: 6
       matrix:
         include:
           - { version: "1.20", java: "17", mc: "1.20.1", legacy: true }
