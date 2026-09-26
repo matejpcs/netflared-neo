@@ -32,9 +32,9 @@ jobs:
         include:
           - { version: "1.20", java: "17", mc: "1.20.1", legacy: true }
           - { version: "1.20.1", java: "17", mc: "1.20.1", legacy: true }
-          - { version: "1.20.2", java: "17", mc: "1.20.2", legacy: false }
-          - { version: "1.20.3", java: "17", mc: "1.20.3", legacy: false }
-          - { version: "1.20.4", java: "17", mc: "1.20.4", legacy: false }
+          - { version: "1.20.2", java: "21", mc: "1.20.2", legacy: false }
+          - { version: "1.20.3", java: "21", mc: "1.20.3", legacy: false }
+          - { version: "1.20.4", java: "21", mc: "1.20.4", legacy: false }
           - { version: "1.20.5", java: "21", mc: "1.20.5", legacy: false }
           - { version: "1.20.6", java: "21", mc: "1.20.6", legacy: false }
           - { version: "1.21", java: "21", mc: "1.21", legacy: false }
