@@ -46,19 +46,19 @@ public class NetflaredDebugScreen extends Screen {
 
         addRenderableWidget(Button.builder(
                 NetflaredMod.tr("netflared.debug.settings"),
-                btn -> minecraft.setScreen(new NetflaredSettingsScreen(this)))
+                btn -> minecraft.gui.setScreen(new NetflaredSettingsScreen(this)))
                 .bounds(centerX - 100, top + 75, 200, 20).build());
 
         addRenderableWidget(Button.builder(
                 NetflaredMod.tr("netflared.settings.back"),
-                btn -> minecraft.setScreen(parent))
+                btn -> minecraft.gui.setScreen(parent))
                 .bounds(centerX - 100, top + 105, 200, 20).build());
     }
 
     private void openStatus(NetflaredStatusScreen.State state, Component message) {
         NetflaredStatusScreen screen = new NetflaredStatusScreen(this, testProfile);
         screen.updateStatus(message.getString(), state);
-        minecraft.setScreen(screen);
+        minecraft.gui.setScreen(screen);
     }
 
     @Override
@@ -76,6 +76,6 @@ public class NetflaredDebugScreen extends Screen {
 
     @Override
     public void onClose() {
-        minecraft.setScreen(parent);
+        minecraft.gui.setScreen(parent);
     }
 }

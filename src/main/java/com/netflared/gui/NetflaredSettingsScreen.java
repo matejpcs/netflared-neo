@@ -69,18 +69,18 @@ public class NetflaredSettingsScreen extends Screen {
 
         addRenderableWidget(Button.builder(
                 NetflaredMod.tr("netflared.settings.cancel"),
-                btn -> minecraft.setScreen(parent))
+                btn -> minecraft.gui.setScreen(parent))
                 .bounds(centerX + 55, height - 52, 100, 20).build());
 
         addRenderableWidget(Button.builder(
                 NetflaredMod.tr("netflared.settings.back"),
-                btn -> minecraft.setScreen(parent))
+                btn -> minecraft.gui.setScreen(parent))
                 .bounds(centerX - 50, height - 25, 100, 20).build());
 
         if (isDebugUser()) {
             addRenderableWidget(Button.builder(
                     NetflaredMod.tr("netflared.debug.button"),
-                    btn -> minecraft.setScreen(new NetflaredDebugScreen(this)))
+                    btn -> minecraft.gui.setScreen(new NetflaredDebugScreen(this)))
                     .bounds(centerX + 55, height - 25, 100, 20).build());
         }
     }
@@ -154,7 +154,7 @@ public class NetflaredSettingsScreen extends Screen {
 
     @Override
     public void onClose() {
-        minecraft.setScreen(parent);
+        minecraft.gui.setScreen(parent);
     }
 
     private class ProfileWidget {
@@ -237,7 +237,7 @@ public class NetflaredSettingsScreen extends Screen {
             }
 
             NetflaredStatusScreen status = new NetflaredStatusScreen(NetflaredSettingsScreen.this, profile);
-            minecraft.setScreen(status);
+            minecraft.gui.setScreen(status);
             status.connect();
         }
     }

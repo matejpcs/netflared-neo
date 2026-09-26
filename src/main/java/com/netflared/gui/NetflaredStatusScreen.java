@@ -131,7 +131,7 @@ public class NetflaredStatusScreen extends Screen {
 
         backButton = Button.builder(
                 NetflaredMod.tr("netflared.status.back"),
-                btn -> minecraft.setScreen(parent))
+                btn -> minecraft.gui.setScreen(parent))
                 .bounds(centerX - 50, centerY + 50, 100, 20).build();
         backButton.visible = state != State.WORKING;
         backButton.active = state != State.WORKING;
@@ -159,7 +159,7 @@ public class NetflaredStatusScreen extends Screen {
                     cancelled = true;
                     NetflaredMod.getTunnelManager().stopTunnel(profile.domain);
                     profile.running = false;
-                    minecraft.setScreen(parent);
+                    minecraft.gui.setScreen(parent);
                 })
                 .bounds(centerX - 50, centerY + 75, 100, 20).build();
         cancelButton.visible = state == State.WORKING;
@@ -207,6 +207,6 @@ public class NetflaredStatusScreen extends Screen {
     public void onClose() {
         cancelled = true;
         NetflaredMod.getTunnelManager().stopTunnel(profile.domain);
-        minecraft.setScreen(parent);
+        minecraft.gui.setScreen(parent);
     }
 }
