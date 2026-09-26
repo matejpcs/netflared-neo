@@ -103,18 +103,14 @@ jobs:
             --no-daemon
             --no-parallel
             --no-configuration-cache
+            --no-build-cache
             --stacktrace
             --refresh-dependencies
             "-Pmod_version=$RELEASE"
-            "-Pminecraft_version=$MC"
-            "-Pneo_version=$NEO"
           )
 
-          if [[ "$LEGACY" == "true" ]]; then
-            gradle "${common[@]}" "-Pforge_version=$FORGE"
-          else
-            gradle "${common[@]}"
-          fi
+          # The checked-out version branch owns its Minecraft/NeoForge coordinates.
+          gradle "${common[@]}"
 
           mapfile -d '' jars < <(
             find build/libs -maxdepth 1 -type f -name '*.jar' \
