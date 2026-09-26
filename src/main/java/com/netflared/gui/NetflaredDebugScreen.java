@@ -2,7 +2,7 @@ package com.netflared.gui;
 
 import com.netflared.NetflaredMod;
 import com.netflared.config.NetflaredConfig;
-import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
@@ -62,15 +62,15 @@ public class NetflaredDebugScreen extends Screen {
     }
 
     @Override
-    public void render(GuiGraphics graphics, int mouseX, int mouseY, float delta) {
-        super.render(graphics, mouseX, mouseY, delta);
+    public void extractRenderState(GuiGraphicsExtractor graphics, int mouseX, int mouseY, float delta) {
+        super.extractRenderState(graphics, mouseX, mouseY, delta);
 
         int centerX = width / 2;
         int titleY = height / 2 - 85;
-        graphics.drawString(font, title, centerX - font.width(title) / 2, titleY, 0xFFFFD166, true);
+        graphics.text(font, title, centerX - font.width(title) / 2, titleY, 0xFFFFD166, true);
 
         Component subtitle = NetflaredMod.tr("netflared.debug.subtitle");
-        graphics.drawString(font, subtitle, centerX - font.width(subtitle) / 2,
+        graphics.text(font, subtitle, centerX - font.width(subtitle) / 2,
                 titleY + 18, 0xFFAAAAAA, false);
     }
 
