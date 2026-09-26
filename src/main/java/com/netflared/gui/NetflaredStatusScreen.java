@@ -3,7 +3,7 @@ package com.netflared.gui;
 import com.netflared.NetflaredMod;
 import com.netflared.config.NetflaredConfig;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.screens.ConnectScreen;
 import net.minecraft.client.gui.screens.Screen;
@@ -168,8 +168,8 @@ public class NetflaredStatusScreen extends Screen {
     }
 
     @Override
-    public void render(GuiGraphics graphics, int mouseX, int mouseY, float delta) {
-        super.render(graphics, mouseX, mouseY, delta);
+    public void extractRenderState(GuiGraphicsExtractor graphics, int mouseX, int mouseY, float delta) {
+        super.extractRenderState(graphics, mouseX, mouseY, delta);
 
         int centerX = width / 2;
         int centerY = height / 2;
@@ -198,9 +198,9 @@ public class NetflaredStatusScreen extends Screen {
         }
     }
 
-    private void drawCentered(GuiGraphics graphics, Component text,
+    private void drawCentered(GuiGraphicsExtractor graphics, Component text,
                               int centerX, int y, int color, boolean shadow) {
-        graphics.drawString(font, text, centerX - font.width(text) / 2, y, color, shadow);
+        graphics.text(font, text, centerX - font.width(text) / 2, y, color, shadow);
     }
 
     @Override
