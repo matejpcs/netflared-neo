@@ -9,8 +9,6 @@ group = mod_group_id
 base { archivesName = mod_id }
 
 java.toolchain.languageVersion = JavaLanguageVersion.of(21)
-repositories { mavenCentral() }
-
 neoForge {
     version = neo_version
 
